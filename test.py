@@ -30,14 +30,10 @@ x_data = tf.placeholder(shape=[None, 2], dtype=tf.float32)
 y_target = tf.placeholder(shape=[3, None], dtype=tf.float32)
 prediction_grid = tf.placeholder(shape=[None, 2], dtype=tf.float32)
 
-# 创建变量
-b = tf.Variable(tf.random_normal(shape=[3,batch_size]))
-
 #kernel 核函数只依赖x_data
 gamma = tf.constant(-10.0)
-dist = tf.reduce_sum(tf.square(x_data), 1)
-dist = tf.reshape(dist, [-1,1])
 sq_dists = tf.multiply(2., tf.matmul(x_data, tf.transpose(x_data)))
+test2 = tf.multiply(gamma, tf.abs(sq_dists))
 my_kernel = tf.exp(tf.multiply(gamma, tf.abs(sq_dists)))
 # 最大的变化是批量矩阵乘法。
 # 最终的结果是三维矩阵，并且需要传播矩阵乘法。
@@ -50,11 +46,14 @@ def reshape_matmul(mat):
     v2 = tf.reshape(v1, [3, batch_size, 1])
     return(tf.matmul(v2, v1))
 
+# 创建变量
+b = tf.Variable(tf.random_normal(shape=[3,batch_size]))
+
 first_term = tf.reduce_sum(b)
 b_vec_cross = tf.matmul(tf.transpose(b), b)
 y_target_cross = reshape_matmul(y_target)
-
-second_term = tf.reduce_sum(tf.multiply(my_kernel, tf.multiply(b_vec_cross, y_target_cross)),[1,2])
+test1 = tf.multiply(b_vec_cross, y_target_cross)
+second_term = tf.reduce_sum(tf.multiply(my_kernel,  y_target_cross),[1,2])
 loss = tf.reduce_sum(tf.negative(tf.subtract(first_term, second_term)))
 
 # Gaussian (RBF) prediction kernel
@@ -70,6 +69,7 @@ pred_kernel = tf.exp(tf.multiply(gamma, tf.abs(pred_sq_dist)))
 # 与二类不同的是，不再对模型输出进行sign（）运算。
 # 因为这里实现的是一对多方法，所以预测值是分类器有最大返回值的类别。
 # 使用TensorFlow的内建函数argmax（）来实现该功能
+test = tf.multiply(y_target,b)
 prediction_output = tf.matmul(tf.multiply(y_target,b), pred_kernel)
 prediction = tf.arg_max(prediction_output-tf.expand_dims(tf.reduce_mean(prediction_output,1), 1), 0)
 accuracy = tf.reduce_mean(tf.cast(tf.equal(prediction, tf.argmax(y_target,0)), tf.float32))
@@ -96,14 +96,17 @@ for i in range(100):
     acc_temp = sess.run(accuracy, feed_dict={x_data: rand_x,
                                              y_target: rand_y,
                                              prediction_grid:rand_x})
-    batch_accuracy.append(acc_temp)
-
-    if (i+1)%25==0:
-        print('Step #' + str(i+1))
-        print('Loss = ' + str(temp_loss))
+    batch_accuracy.append(acc_temp) 
+    if (i+1)%50==0:
+        print(sess.run(b_vec_cross, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+        print('b_vec_cross')
+        print(sess.run(y_target_cross, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+        print('y_target_cross')
+        print(sess.run(test1, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+        print('test1')
 # 创建数据点的预测网格，运行预测函数
-print('hehe', val_x[:, 0], np.array([1.0, 1.0, 3]))
-print(np.array([1.0, 1.0, 3]).min())
+# print('hehe', val_x[:, 0], np.array([1.0, 1.0, 3]))
+# print(np.array([1.0, 1.0, 3]).min())
 x_min, x_max = val_x[:, 0].min() - 1, val_x[:, 0].max() + 1
 y_min, y_max = val_x[:, 1].min() - 1, val_x[:, 1].max() + 1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),

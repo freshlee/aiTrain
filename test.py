@@ -69,8 +69,8 @@ pred_kernel = tf.exp(tf.multiply(gamma, tf.abs(pred_sq_dist)))
 # 与二类不同的是，不再对模型输出进行sign（）运算。
 # 因为这里实现的是一对多方法，所以预测值是分类器有最大返回值的类别。
 # 使用TensorFlow的内建函数argmax（）来实现该功能
-test = tf.multiply(y_target,b)
-prediction_output = tf.matmul(tf.multiply(y_target,b), pred_kernel)
+prediction_output = tf.matmul(b, pred_kernel)
+test = prediction_output-tf.expand_dims(tf.reduce_mean(prediction_output,1), 1)
 prediction = tf.arg_max(prediction_output-tf.expand_dims(tf.reduce_mean(prediction_output,1), 1), 0)
 accuracy = tf.reduce_mean(tf.cast(tf.equal(prediction, tf.argmax(y_target,0)), tf.float32))
 

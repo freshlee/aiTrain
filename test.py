@@ -32,8 +32,9 @@ prediction_grid = tf.placeholder(shape=[None, 2], dtype=tf.float32)
 
 #kernel 核函数只依赖x_data
 gamma = tf.constant(-10.0)
+dist = tf.reduce_sum(tf.square(x_data), 1)
+dist = tf.reshape(dist, [-1,1])
 sq_dists = tf.multiply(2., tf.matmul(x_data, tf.transpose(x_data)))
-test2 = tf.multiply(gamma, tf.abs(sq_dists))
 my_kernel = tf.exp(tf.multiply(gamma, tf.abs(sq_dists)))
 # 最大的变化是批量矩阵乘法。
 # 最终的结果是三维矩阵，并且需要传播矩阵乘法。
@@ -52,8 +53,7 @@ b = tf.Variable(tf.random_normal(shape=[3,batch_size]))
 first_term = tf.reduce_sum(b)
 b_vec_cross = tf.matmul(tf.transpose(b), b)
 y_target_cross = reshape_matmul(y_target)
-test1 = tf.multiply(b_vec_cross, y_target_cross)
-second_term = tf.reduce_sum(tf.multiply(my_kernel,  y_target_cross),[1,2])
+second_term = tf.reduce_sum(tf.multiply(my_kernel, tf.multiply(b_vec_cross, y_target_cross)),[1,2])
 loss = tf.reduce_sum(tf.negative(tf.subtract(first_term, second_term)))
 
 # Gaussian (RBF) prediction kernel
@@ -69,8 +69,7 @@ pred_kernel = tf.exp(tf.multiply(gamma, tf.abs(pred_sq_dist)))
 # 与二类不同的是，不再对模型输出进行sign（）运算。
 # 因为这里实现的是一对多方法，所以预测值是分类器有最大返回值的类别。
 # 使用TensorFlow的内建函数argmax（）来实现该功能
-prediction_output = tf.matmul(b, pred_kernel)
-test = prediction_output-tf.expand_dims(tf.reduce_mean(prediction_output,1), 1)
+prediction_output = tf.matmul(tf.multiply(y_target,b), pred_kernel)
 prediction = tf.arg_max(prediction_output-tf.expand_dims(tf.reduce_mean(prediction_output,1), 1), 0)
 accuracy = tf.reduce_mean(tf.cast(tf.equal(prediction, tf.argmax(y_target,0)), tf.float32))
 
@@ -97,50 +96,67 @@ for i in range(100):
                                              y_target: rand_y,
                                              prediction_grid:rand_x})
     batch_accuracy.append(acc_temp) 
-    if (i+1)%50==0:
-        print(sess.run(b_vec_cross, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
-        print('b_vec_cross')
-        print(sess.run(y_target_cross, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
-        print('y_target_cross')
-        print(sess.run(test1, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
-        print('test1')
+    # if (i+1)%50==0:
+    #     # print(sess.run(b_vec_cross, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+    #     # print('b_vec_cross')
+    #     print(sess.run(prediction_output, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+    #     print('prediction_output')
+    #     print(sess.run(test3, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+    #     print('test3')
+    #     print(sess.run(test4, feed_dict={x_data: rand_x, y_target: rand_y, prediction_grid:rand_x}))
+    #     print('test4')
 # 创建数据点的预测网格，运行预测函数
-# print('hehe', val_x[:, 0], np.array([1.0, 1.0, 3]))
-# print(np.array([1.0, 1.0, 3]).min())
+rand_index = np.random.choice(len(val_x), size=batch_size)
+rand_x_sub = val_x[rand_index]
+rand_y_sub = val_y[:,rand_index]
 x_min, x_max = val_x[:, 0].min() - 1, val_x[:, 0].max() + 1
 y_min, y_max = val_x[:, 1].min() - 1, val_x[:, 1].max() + 1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
                      np.arange(y_min, y_max, 0.02))
 grid_points = np.c_[xx.ravel(), yy.ravel()]
-grid_predictions = sess.run(prediction, feed_dict={x_data: rand_x,
+# grid_predictions = sess.run(prediction, feed_dict={x_data: rand_x,
+#                                                    y_target: rand_y,
+#                                                    prediction_grid: grid_points})
+kernel = sess.run(prediction, feed_dict={x_data: rand_x,
                                                    y_target: rand_y,
-                                                   prediction_grid: grid_points})
-grid_predictions = grid_predictions.reshape(xx.shape)
+                                                   prediction_grid: rand_x_sub})
+pre = kernel
+real = np.argmax(np.transpose(rand_y_sub), 1)
+# print(kernel)
+# print(np.argmax(np.transpose(rand_y_sub), 1))
+print(np.equal(kernel, np.argmax(np.transpose(rand_y_sub), 1)))
+resList = ['setosa', 'versicolor', 'virginica']
+count = 0
+for i, j in zip(pre, real):
+    print(resList[i], resList[j], bool(resList[i] == resList[j]))
+    if resList[i] == resList[j]:
+        count += 1
+print('准确率:', count / len(pre))
+# grid_predictions = grid_predictions.reshape(xx.shape)
+# # Plot points and grid
+# plt.contourf(xx, yy, grid_predictions, cmap=plt.cm.Paired, alpha=0.8)
+# plt.plot(class1_x, class1_y, 'ro', label='I. setosa')
+# plt.plot(class2_x, class2_y, 'kx', label='I. versicolor')
+# plt.plot(class3_x, class3_y, 'gv', label='I. virginica')
+# plt.title('Gaussian SVM Results on Iris Data')
+# plt.xlabel('Pedal Length')
+# plt.ylabel('Sepal Width')
+# plt.legend(loc='lower right')
+# plt.ylim([-0.5, 3.0])
+# plt.xlim([3.5, 8.5])
+# plt.show()
 
-# Plot points and grid
-plt.contourf(xx, yy, grid_predictions, cmap=plt.cm.Paired, alpha=0.8)
-plt.plot(class1_x, class1_y, 'ro', label='I. setosa')
-plt.plot(class2_x, class2_y, 'kx', label='I. versicolor')
-plt.plot(class3_x, class3_y, 'gv', label='I. virginica')
-plt.title('Gaussian SVM Results on Iris Data')
-plt.xlabel('Pedal Length')
-plt.ylabel('Sepal Width')
-plt.legend(loc='lower right')
-plt.ylim([-0.5, 3.0])
-plt.xlim([3.5, 8.5])
-plt.show()
+# # Plot batch accuracy
+# plt.plot(batch_accuracy, 'k-', label='Accuracy')
+# plt.title('Batch Accuracy')
+# plt.xlabel('Generation')
+# plt.ylabel('Accuracy')
+# plt.legend(loc='lower right')
+# plt.show()
 
-# Plot batch accuracy
-plt.plot(batch_accuracy, 'k-', label='Accuracy')
-plt.title('Batch Accuracy')
-plt.xlabel('Generation')
-plt.ylabel('Accuracy')
-plt.legend(loc='lower right')
-plt.show()
-
-# Plot loss over time
-plt.plot(loss_vec, 'k-')
-plt.title('Loss per Generation')
-plt.xlabel('Generation')
-plt.ylabel('Loss')
-plt.show()
+# # Plot loss over time
+# plt.plot(loss_vec, 'k-')
+# plt.title('Loss per Generation')
+# plt.xlabel('Generation')
+# plt.ylabel('Loss')
+# plt.show()

@@ -24,7 +24,7 @@ class2_x = [x[0] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-versicolo
 class2_y = [x[1] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-versicolor']
 class3_x = [x[0] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-virginica']
 class3_y = [x[1] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-virginica']
-batch_size = 50
+batch_size = 100
 # 初始化feedin
 x_data = tf.placeholder(shape=[None, 2], dtype=tf.float32)
 y_target = tf.placeholder(shape=[3, None], dtype=tf.float32)
@@ -82,7 +82,7 @@ sess.run(init)
 # 训练开始
 loss_vec = []
 batch_accuracy = []
-for i in range(100):
+for i in range(200):
     rand_index = np.random.choice(len(val_x), size=batch_size)
     rand_x = val_x[rand_index]
     rand_y = val_y[:,rand_index]

@@ -9,15 +9,21 @@ ops.reset_default_graph()
 
 sess = tf.Session()
 df1 = pd.read_csv('./data/iris.data', sep='\n',low_memory=False,header=None)
-trainData, testData = train_test_split(df1, test_size=0.5)
-trainData = np.array(df1)
-trainData = trainData.tolist()
+testData = pd.read_csv('./data/iris_test.csv', sep='\n',low_memory=False,header=None)
+trainData = np.array(df1).tolist()
+testData = np.array(testData).tolist()
 trainData = [item[0].split(',') for item in trainData]
+testData = [item[0].split(',') for item in testData]
 val_y1 = np.array([1 if item[4] == 'Iris-setosa' else -1 for item in trainData])
 val_y2 = np.array([1 if item[4] == 'Iris-versicolor' else -1 for item in trainData])
 val_y3 = np.array([1 if item[4] == 'Iris-virginica' else -1 for item in trainData])
 val_y = np.array([val_y1, val_y2, val_y3])
+# val_y1_test = np.array([1 if item[4] == 'Iris-setosa' else -1 for item in testData])
+# val_y2_test = np.array([1 if item[4] == 'Iris-versicolor' else -1 for item in testData])
+# val_y3_test = np.array([1 if item[4] == 'Iris-virginica' else -1 for item in testData])
 val_x = np.array([[float(x[0]), float(x[3])] for x in trainData])
+# val_y_test = np.array([val_y1_test, val_y2_test, val_y3_test])
+val_x_test = np.array([[float(x[0]), float(x[3])] for x in testData])
 class1_x = [x[0] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-setosa']
 class1_y = [x[1] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-setosa']
 class2_x = [x[0] for i,x in enumerate(val_x) if trainData[i][4]=='Iris-versicolor']
@@ -82,7 +88,7 @@ sess.run(init)
 # 训练开始
 loss_vec = []
 batch_accuracy = []
-for i in range(200):
+for i in range(1000):
     rand_index = np.random.choice(len(val_x), size=batch_size)
     rand_x = val_x[rand_index]
     rand_y = val_y[:,rand_index]
@@ -107,8 +113,8 @@ for i in range(200):
     #     print('test4')
 # 创建数据点的预测网格，运行预测函数
 rand_index = np.random.choice(len(val_x), size=batch_size)
-rand_x_sub = val_x[rand_index]
-rand_y_sub = val_y[:,rand_index]
+rand_x_sub = val_x_test
+# rand_y_sub = val_y_test
 x_min, x_max = val_x[:, 0].min() - 1, val_x[:, 0].max() + 1
 y_min, y_max = val_x[:, 1].min() - 1, val_x[:, 1].max() + 1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
@@ -117,21 +123,23 @@ grid_points = np.c_[xx.ravel(), yy.ravel()]
 # grid_predictions = sess.run(prediction, feed_dict={x_data: rand_x,
 #                                                    y_target: rand_y,
 #                                                    prediction_grid: grid_points})
-kernel = sess.run(prediction, feed_dict={x_data: rand_x,
+resDict = list()
+for i in range(20): 
+        kernel = sess.run(prediction, feed_dict={x_data: rand_x,
                                                    y_target: rand_y,
                                                    prediction_grid: rand_x_sub})
-pre = kernel
-real = np.argmax(np.transpose(rand_y_sub), 1)
+        resDict.append(kernel)
+resDict = np.array(resDict)
+print(resDict)
 # print(kernel)
 # print(np.argmax(np.transpose(rand_y_sub), 1))
-print(np.equal(kernel, np.argmax(np.transpose(rand_y_sub), 1)))
+# print(np.equal(kernel, np.argmax(np.transpose(rand_y_sub), 1)))\
 resList = ['setosa', 'versicolor', 'virginica']
-count = 0
-for i, j in zip(pre, real):
-    print(resList[i], resList[j], bool(resList[i] == resList[j]))
-    if resList[i] == resList[j]:
-        count += 1
-print('准确率:', count / len(pre))
+for line, featrue in zip(np.transpose(resDict), testData):
+        resItem = np.argmax(np.bincount(line))
+        print(resList[resItem], featrue)
+# count = 0
+# print('准确率:', count / len(pre))
 # grid_predictions = grid_predictions.reshape(xx.shape)
 # # Plot points and grid
 # plt.contourf(xx, yy, grid_predictions, cmap=plt.cm.Paired, alpha=0.8)

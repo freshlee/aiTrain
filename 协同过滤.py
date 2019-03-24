@@ -73,7 +73,7 @@ for key, value in userRecommendDict.items():
         userRecommendList.append([user, moviesMap[movieId]])
         userRecommendDictAll['uid_' + str(user) + ';mid_' + str(moviesMap[movieId])] = val
         # 建立测试索引
-# print(userRecommendDictAll)
+print(userRecommendDictAll)
 # 将推荐结果的电影id转换成对应的电影名
 recommendDF = pd.DataFrame(userRecommendList, columns=['userId', 'movieId'])
 recommendDF = pd.merge(recommendDF, moviesDF[['movieId', 'title']], on='movieId', how='inner')

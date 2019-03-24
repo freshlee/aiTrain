@@ -120,9 +120,9 @@ y_min, y_max = val_x[:, 1].min() - 1, val_x[:, 1].max() + 1
 xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02),
                      np.arange(y_min, y_max, 0.02))
 grid_points = np.c_[xx.ravel(), yy.ravel()]
-# grid_predictions = sess.run(prediction, feed_dict={x_data: rand_x,
-#                                                    y_target: rand_y,
-#                                                    prediction_grid: grid_points})
+grid_predictions = sess.run(prediction, feed_dict={x_data: rand_x,
+                                                   y_target: rand_y,
+                                                   prediction_grid: grid_points})
 resDict = list()
 for i in range(20): 
         kernel = sess.run(prediction, feed_dict={x_data: rand_x,
@@ -138,33 +138,31 @@ resList = ['setosa', 'versicolor', 'virginica']
 for line, featrue in zip(np.transpose(resDict), testData):
         resItem = np.argmax(np.bincount(line))
         print(resList[resItem], featrue)
-# count = 0
-# print('准确率:', count / len(pre))
-# grid_predictions = grid_predictions.reshape(xx.shape)
-# # Plot points and grid
-# plt.contourf(xx, yy, grid_predictions, cmap=plt.cm.Paired, alpha=0.8)
-# plt.plot(class1_x, class1_y, 'ro', label='I. setosa')
-# plt.plot(class2_x, class2_y, 'kx', label='I. versicolor')
-# plt.plot(class3_x, class3_y, 'gv', label='I. virginica')
-# plt.title('Gaussian SVM Results on Iris Data')
-# plt.xlabel('Pedal Length')
-# plt.ylabel('Sepal Width')
-# plt.legend(loc='lower right')
-# plt.ylim([-0.5, 3.0])
-# plt.xlim([3.5, 8.5])
-# plt.show()
+grid_predictions = grid_predictions.reshape(xx.shape)
+# Plot points and grid
+plt.contourf(xx, yy, grid_predictions, cmap=plt.cm.Paired, alpha=0.8)
+plt.plot(class1_x, class1_y, 'ro', label='I. setosa')
+plt.plot(class2_x, class2_y, 'kx', label='I. versicolor')
+plt.plot(class3_x, class3_y, 'gv', label='I. virginica')
+plt.title('Gaussian SVM Results on Iris Data')
+plt.xlabel('Pedal Length')
+plt.ylabel('Sepal Width')
+plt.legend(loc='lower right')
+plt.ylim([-0.5, 3.0])
+plt.xlim([3.5, 8.5])
+plt.show()
 
-# # Plot batch accuracy
-# plt.plot(batch_accuracy, 'k-', label='Accuracy')
-# plt.title('Batch Accuracy')
-# plt.xlabel('Generation')
-# plt.ylabel('Accuracy')
-# plt.legend(loc='lower right')
-# plt.show()
+# Plot batch accuracy
+plt.plot(batch_accuracy, 'k-', label='Accuracy')
+plt.title('Batch Accuracy')
+plt.xlabel('Generation')
+plt.ylabel('Accuracy')
+plt.legend(loc='lower right')
+plt.show()
 
-# # Plot loss over time
-# plt.plot(loss_vec, 'k-')
-# plt.title('Loss per Generation')
-# plt.xlabel('Generation')
-# plt.ylabel('Loss')
-# plt.show()
+# Plot loss over time
+plt.plot(loss_vec, 'k-')
+plt.title('Loss per Generation')
+plt.xlabel('Generation')
+plt.ylabel('Loss')
+plt.show()

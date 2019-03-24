@@ -20,7 +20,7 @@ def getRamdonCenter(k, x_data):
         # for mi, ma in zip(np.array(minList), np.array(maxList)):
             # print(mi, ma)
         res.append(list(np.random.uniform(low=mi, high=ma) for mi, ma in zip(np.array(minList), np.array(maxList))))
-    print(res)
+    return np.array(res)
 
 
 def formate(item, mininum, maxinum):
@@ -28,7 +28,7 @@ def formate(item, mininum, maxinum):
     return res 
 
 def toMatrix(x_data):
-    x_data = np.matrix(x_data)
+    # x_data = np.matrix(x_data)
     mininum = np.min(x_data)
     maxinum = np.max(x_data)
     # 遍历矩阵 规整化
@@ -36,12 +36,21 @@ def toMatrix(x_data):
         for ColIndex, ColItemm in enumerate(RowItem): 
             RowItem[ColIndex] = formate(ColItemm, mininum, maxinum)
         x_data[RowIndex] = RowItem
-    print(x_data)
+    return x_data
+
+# 两点距离
 def distance(x1_list, x2_list):
+    sum = 0
     for x1, x2 in zip(x1_list, x2_list):
-        res = np.multiply(np.matrix(x1) - np.matrix(x2))
+        sum += (x2 - x1) ** 2
+    sum = sum ** 0.5
+    return sum
 # FCM
 if __name__ == "__main__":
     X_data,y = loadData(datasets.load_iris());
-    # toMatrix(X_data)
-    getRamdonCenter(3, X_data)
+    X_data = toMatrix(X_data)
+    centerList = getRamdonCenter(3, X_data)
+    # return
+    for i in centerList:
+        for x in X_data:
+            print(distance(x, i))

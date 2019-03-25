@@ -14,7 +14,6 @@ def getRamdonCenter(k, x_data):
     maxList = list(x_data[item][index] for index, item in enumerate(maxList))
     minList = np.argmin(x_data, 0)
     minList = list(x_data[item][index] for index, item in enumerate(minList))
-    print(maxList, minList)
     res = []
     for i in range(k):
         # for mi, ma in zip(np.array(minList), np.array(maxList)):
@@ -45,12 +44,14 @@ def distance(x1_list, x2_list):
         sum += (x2 - x1) ** 2
     sum = sum ** 0.5
     return sum
+def get_membership(x_data):
+    membership = np.random.uniform(len(x_data))
+    return membership
 # FCM
 if __name__ == "__main__":
     X_data,y = loadData(datasets.load_iris());
     X_data = toMatrix(X_data)
     centerList = getRamdonCenter(3, X_data)
-    # return
-    for i in centerList:
-        for x in X_data:
-            print(distance(x, i))
+    distance_list = list(list(distance(x, i) for x in X_data) for i in centerList)
+    np.random.rand(4,3)
+    print(get_membership(X_data))

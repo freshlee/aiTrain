@@ -14,7 +14,7 @@ def formate(lst):
     for name, group in mission.groupby('name'):
         # print(np.array(group)[:, [0,1,1]])
         for i in np.array(group)[:, [0,1,2]]:
-            orderData.insert(0, list(i))
+            orderData.append(list(i))
         # orderData = np.vstack((np.array(group)[:, [0,1,2]], orderData))
         nameList.append(name)
         res.append(list(i[0] for i in np.array(group)[:, [1]]))

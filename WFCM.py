@@ -12,6 +12,7 @@ def loadData(iris):
     return X,y
 # 生产随机中心点
 def getRamdonCenter(k, x_data):
+    print(x_data)
     maxList = np.argmax(x_data, 0)
     maxList = list(x_data[item][index] for index, item in enumerate(maxList))
     minList = np.argmin(x_data, 0)
@@ -43,7 +44,7 @@ def toMatrix(x_data):
 
 # 两点距离
 def distance(x1_list, x2_list):
-    sum = 0
+    sum = 0 
     for x1, x2 in zip(x1_list, x2_list):
         sum += (x2 - x1) ** 2
     sum = sum ** 0.5
@@ -72,6 +73,7 @@ def computedCenter(u, x_data):
 
 def train(x_data):
     centerListInit = getRamdonCenter(3, x_data)
+    print(centerListInit)
     with tf.Session() as sess:
         x_data_tf = tf.placeholder(shape=[None, 3], dtype=tf.float32)
         centerList = tf.placeholder(shape=[3, None], dtype=tf.float32)
@@ -79,8 +81,8 @@ def train(x_data):
         centerList=centerList.eval(feed_dict={x_data_tf: x_data, centerList: centerListInit})
         distance_list = list(list(distance(x, i) for x in x_data) for i in centerList)
         distance_list=tf.convert_to_tensor(distance_list)
-        u = get_membership(x_data)
-        centerList = computedCenter(u, x_data_tf)
+        # u = get_membership(x_data)
+        # centerList = computedCenter(u, x_data_tf)
         loss = tf.reduce_mean(tf.multiply(centerList, tf.transpose(distance_list)))
         my_opt = tf.train.GradientDescentOptimizer(0.01)
         train_step = my_opt.minimize(loss)

@@ -14,7 +14,7 @@ def formate(lst):
     for name, group in mission.groupby('name'):
         # print(np.array(group)[:, [0,1,1]])
         for i in np.array(group)[:, [0,1,2]]:
-            orderData.insert(0, i)
+            orderData.append(list(i))
         # orderData = np.vstack((np.array(group)[:, [0,1,2]], orderData))
         nameList.append(name)
         res.append(list(i[0] for i in np.array(group)[:, [1]]))
@@ -35,11 +35,11 @@ def split(dist, data):
     res = list()
     # print(data, dist)
     for item in np.array(dist):
-        res.append(str(data[count: count + item][0]) + '-' + str(data[count: count + item][-1]))
+        res.append('4/' + str(data[count: count + item][0]) + '-4/' + str(data[count: count + item][-1]))
         count += item
     return res
 if __name__ == "__main__":
-    rowdistList = pd.read_excel('./data/test.xlsx')
+    rowdistList = pd.read_excel('./data/data.xlsx', sheet_name='Sheet1')
     nameList = []
     distList = np.array(rowdistList)[:, [0, 1, 2]]
     cal = calendar.monthcalendar(2019, 4)
@@ -52,12 +52,10 @@ if __name__ == "__main__":
     finalarrage = np.array([])
     for index, item in enumerate(write):
         finalarrage = np.append(finalarrage, split(item, dateList))
-    # print(finalarrage, orderData)
+    orderData = np.array(orderData)
     # orderData = np.array(orderData)
-    print(orderData)
-# df1=pd.DataFrame({'Data1': orderData[:, 0]})
-# df2=pd.DataFrame({'Data2': orderData[:, 1]})
-# df3=pd.DataFrame({'Data3': orderData[:, 2]})
-# df4=pd.DataFrame({'Data4': finalarrage})
-# All=[df1,df2,df3, df4]
-# print(All)
+    # print(orderData[:, 1
+    df1 = pd.DataFrame({"任务": orderData[:, 0], '天数': orderData[:, 1], '名字': orderData[:, 2], '日期':finalarrage})
+    df1.to_excel('./data/test.xlsx',sheet_name='test',index=False)
+    
+    print(All)

@@ -50,6 +50,7 @@ def distance(x1_list, x2_list):
     return sum
 def get_membership(x_data):
     membership = tf.random_normal(shape=tf.shape(x_data),dtype=tf.float32)
+    membership = tf.Variable(membership)
     return membership
 
 def draw(data):
@@ -58,19 +59,35 @@ def draw(data):
     ax = Axes3D(fig) 
     ax.scatter(data[:, 0], data[:, 2], data[:, 1])
 
+def computedCenter(u, x_data):
+    # total = 5
+    # cate = 3
+    # u = np.random.random((cate, total))
+    # x_data = np.random.random((total, 3))
+    sums = tf.tensordot(u, x_data, axes=0)
+    res = tf.divide(sums, tf.reduce_sum(u))
+    # print(sums, res)
+    return res
+
+
 def train(x_data):
-    centerList = getRamdonCenter(3, x_data)
+    centerListInit = getRamdonCenter(3, x_data)
     with tf.Session() as sess:
         x_data_tf = tf.placeholder(shape=[None, 3], dtype=tf.float32)
+        centerList = tf.placeholder(shape=[3, None], dtype=tf.float32)
+        # 每个点离分类点的距离[3, N]
+        centerList=centerList.eval(feed_dict={x_data_tf: x_data, centerList: centerListInit})
         distance_list = list(list(distance(x, i) for x in x_data) for i in centerList)
         distance_list=tf.convert_to_tensor(distance_list)
-        # loss = tf.reduce_mean(tf.multiply(get_membership(x_data_tf), tf.transpose(distance_list)))
-        # my_opt = tf.train.GradientDescentOptimizer(0.01)
-        # train_step = my_opt.minimize(loss)
+        u = get_membership(x_data)
+        centerList = computedCenter(u, x_data_tf)
+        loss = tf.reduce_mean(tf.multiply(centerList, tf.transpose(distance_list)))
+        my_opt = tf.train.GradientDescentOptimizer(0.01)
+        train_step = my_opt.minimize(loss)
         # 训练开始
         init = tf.global_variables_initializer()
         sess.run(init)
-        sess.run(distance_list, feed_dict={x_data_tf: x_data})
+        sess.run(train_step, feed_dict={x_data_tf: x_data, centerList: centerListInit})
         # print(centerList)
         # sess.run(centerList, feed_dict={x_data_tf: x_data})
 # FCM
@@ -78,7 +95,8 @@ if __name__ == "__main__":
     x_data,y = loadData(datasets.load_iris());
     draw(x_data)
     x_data = toMatrix(x_data)
-    # # loss = np.sum(np.multiply(get_membership(x_data), distance_list))
+    # loss = np.sum(np.multiply(get_membership(x_data), distance_list))
     train(x_data)
+    # computedCenter()
     
         

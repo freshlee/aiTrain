@@ -12,8 +12,9 @@ def loadData(iris):
     return X,y
 # 生产随机中心点
 def getRamdonCenter(k, x_data):
-    print(x_data)
+    
     maxList = np.argmax(x_data, 0)
+    # print(maxList, x_data)
     maxList = list(x_data[item][index] for index, item in enumerate(maxList))
     minList = np.argmin(x_data, 0)
     minList = list(x_data[item][index] for index, item in enumerate(minList))
@@ -65,7 +66,8 @@ def computedCenter(u, x_data):
     # cate = 3
     # u = np.random.random((cate, total))
     # x_data = np.random.random((total, 3))
-    sums = tf.tensordot(u, x_data, axes=0)
+    # print(u.shape, x_data.shape)
+    sums = tf.matmul(tf.transpose(u), x_data)
     res = tf.divide(sums, tf.reduce_sum(u))
     # print(sums, res)
     return res
@@ -73,7 +75,6 @@ def computedCenter(u, x_data):
 
 def train(x_data):
     centerListInit = getRamdonCenter(3, x_data)
-    print(centerListInit)
     with tf.Session() as sess:
         x_data_tf = tf.placeholder(shape=[None, 3], dtype=tf.float32)
         centerList = tf.placeholder(shape=[3, None], dtype=tf.float32)
@@ -81,15 +82,21 @@ def train(x_data):
         centerList=centerList.eval(feed_dict={x_data_tf: x_data, centerList: centerListInit})
         distance_list = list(list(distance(x, i) for x in x_data) for i in centerList)
         distance_list=tf.convert_to_tensor(distance_list)
-        # u = get_membership(x_data)
-        # centerList = computedCenter(u, x_data_tf)
-        loss = tf.reduce_mean(tf.multiply(centerList, tf.transpose(distance_list)))
+        centerList = tf.convert_to_tensor(centerList)
+        u = get_membership(x_data)
+        centerList = computedCenter(u, x_data_tf)
+        loss = tf.reduce_mean(tf.multiply(u, tf.transpose(distance_list)))
         my_opt = tf.train.GradientDescentOptimizer(0.01)
         train_step = my_opt.minimize(loss)
         # 训练开始
         init = tf.global_variables_initializer()
         sess.run(init)
-        sess.run(train_step, feed_dict={x_data_tf: x_data, centerList: centerListInit})
+        print('centerListInit', np.shape(centerListInit), centerList.shape)
+        # 训练开始
+        for i in range(100):
+            sess.run(train_step, feed_dict={x_data_tf: x_data, centerList: centerListInit})
+            loss_now = sess.run(loss, feed_dict={x_data_tf: x_data, centerList: centerListInit})
+            print(loss_now)
         # print(centerList)
         # sess.run(centerList, feed_dict={x_data_tf: x_data})
 # FCM

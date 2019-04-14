@@ -2,6 +2,7 @@
 import jieba
 from gensim.models import word2vec
 from gensim.models import KeyedVectors
+from gensim.corpora import Dictionary
 import numpy as np;
 import pandas as pd;
 import xml.dom.minidom as xmldom
@@ -53,5 +54,10 @@ with open(fileSegWordDonePath,'wb') as fW:
 
 sentences = word2vec.Text8Corpus("./data/corpusSegDone.txt")
 model = word2vec.Word2Vec(sentences,size=200)
-test = model.most_similar("基金会", topn=100)
-print(test)
+model.save("./data/corpusSegDone.bin")
+texts = [['human', 'interface', 'computer']]
+dct = Dictionary(texts)
+# test = model.most_similar("联合国", topn=100)
+vector = model.wv['象山']
+print(vector)
+# print(model['阳光工程'])
